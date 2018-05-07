@@ -1,0 +1,35 @@
+#!/usr/bin/php -q
+<?php
+if(count($argv)!==4) {
+    echo("Usage : ".$argv[0]." [INPUT FILE] [STRING_TO_FIND] [REPLACEMENT]\n");
+    die();
+}
+
+$fp = fopen($argv[1], 'r');
+
+while($line = fgets($fp,999999)) {
+    if(strstr($line,$argv[2])) {
+        $preg = '/s:(\d+):\\\\"('.str_replace(["/"],["\\/"], $argv[2]).'.*?)\\\\"/';
+        preg_match_all(
+            $preg,
+            $line,
+            $matches,
+            PREG_OFFSET_CAPTURE
+        );
+        if(count($matches[0])>0) {
+            //Something found
+            $reps = 1;
+            for($i=0;$i<count($matches[2]);$i++) {
+                $org = 's:'.$matches[1][$i][0].':\"'.$matches[2][$i][0].'\"';
+                $chg = str_replace($argv[2],$argv[3], $matches[2][$i][0]);
+                $dst = 's:'.count($chg).':\"'.$chg.'\"';
+                $line = str_replace($org,$dst, $line, $reps);
+            }
+            echo($line);
+        } else {
+            echo(str_replace($argv[2],$argv[3],$line));
+        }
+    } else {
+        echo($line);
+    }
+}
